@@ -2,7 +2,7 @@
 
 set -x
 
-MY_WP_ROOT=/opt/app-root/src
+MY_WP_ROOT=/var/www/html
 WP_CONTENT_ROOT=/data/wp-content
 MY_SRV=$(echo $OPENSHIFT_BUILD_NAME|awk -F'-' '{print $1"-"$2}')
 
