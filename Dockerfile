@@ -10,7 +10,7 @@ ENV SMTP_DL https://downloads.wordpress.org/plugin/wp-mail-smtp.0.9.6.zip
 
 RUN set -x && \
     yum -y autoremove rh-php56-php-pgsql rh-php56-php-ldap postgresql postgresql-devel postgresql-libs autoconf automake glibc-devel glibc-headers libcom_err-devel libcurl-devel libstdc++-devel make openssl-devel pcre-devel gcc gcc-c++ gdb gdb-gdbserver git libgcrypt-devel libgpg-error-devel libxml2-devel libxslt-devel openssh openssh-clients sqlite-devel zlib-devel && \
-    rpm -qa|sort && \
+    rpm -qa|sort && mkdir -p /var/www/html &&\
     cd /tmp/ && \
     mkdir -p /data/wp-content && \
     curl -sSO ${SMTP_DL} && \
