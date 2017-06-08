@@ -30,7 +30,7 @@ EXPOSE 8080
 
 USER 1001
 
-ADD  wp-config.php.template
+#ADD  wp-config.php.template
 
 #CMD ["/bin/sh","-c","while true; do echo hello world; sleep 60; done"]
 CMD ["/docker-entrypoint.sh"]
