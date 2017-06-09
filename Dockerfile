@@ -1,47 +1,39 @@
-FROM php:5.6-apache
+FROM registry.access.redhat.com/rhscl/php-56-rhel7:latest
 
-# install the PHP extensions we need
-RUN set -ex; \
-	\
-	apt-get update; \
-	apt-get install -y \
-		libjpeg-dev \
-		libpng12-dev \
-	; \
-	rm -rf /var/lib/apt/lists/*; \
-	\
-	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
-	docker-php-ext-install gd mysqli opcache
-# TODO consider removing the *-dev deps and only keeping the necessary lib* packages
+# To be able to change the Image
+USER 0
 
-# set recommended PHP.ini settings
-# see https://secure.php.net/manual/en/opcache.installation.php
-RUN { \
-		echo 'opcache.memory_consumption=128'; \
-		echo 'opcache.interned_strings_buffer=8'; \
-		echo 'opcache.max_accelerated_files=4000'; \
-		echo 'opcache.revalidate_freq=2'; \
-		echo 'opcache.fast_shutdown=1'; \
-		echo 'opcache.enable_cli=1'; \
-	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
+ENV WP_DL https://wordpress.org/latest.tar.gz
+ENV SMTP_DL https://downloads.wordpress.org/plugin/wp-mail-smtp.0.9.6.zip
 
-RUN a2enmod rewrite expires
+# mod_authn_dbd mod_authn_dbm mod_authn_dbd mod_authn_dbm mod_echo mod_lua
 
-VOLUME /var/www/html
+RUN set -x && \
+    yum -y autoremove rh-php56-php-pgsql rh-php56-php-ldap postgresql postgresql-devel postgresql-libs autoconf automake glibc-devel glibc-headers libcom_err-devel libcurl-devel libstdc++-devel make openssl-devel pcre-devel gcc gcc-c++ gdb gdb-gdbserver git libgcrypt-devel libgpg-error-devel libxml2-devel libxslt-devel openssh openssh-clients sqlite-devel zlib-devel && \
+    rpm -qa|sort && \
+    cd /tmp/ && \
+    mkdir -p /data/wp-content && \
+    curl -sSO ${SMTP_DL} && \
+    curl -sS ${WP_DL} | tar xfz - -C /tmp && \
+    mv /tmp/wordpress/* /opt/app-root/src && \
+    mv /opt/app-root/src/wp-content /tmp/ && \
+    ln -s /data/wp-content /opt/app-root/src/wp-content && \
+    sed -i 's/LogFormat "%h /LogFormat "%{X-Forwarded-For}i /' /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
+    sed -i 's/;date.timezone.*/date.timezone = Europe\/Vienna/' /etc/opt/rh/rh-php56/php.ini && \
+    touch /opt/app-root/src/wp-config.php && \
+    echo '<?php phpinfo(); ' > /opt/app-root/src/pinf.php && \
+    chown -R 1001:0 /data/wp-content /opt/app-root/src && \
+    chmod 777 /opt/app-root/src/wp-config.php /opt/app-root/src/wp-content && \
+    chmod -R 777 /data/wp-content /var/opt/rh/rh-php56/lib/php/session /opt/app-root/src/wp-content
 
-ENV WORDPRESS_VERSION 4.7.5
-ENV WORDPRESS_SHA1 fbe0ee1d9010265be200fe50b86f341587187302
+EXPOSE 8080
 
-RUN set -ex; \
-	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
-	echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
-# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
-	tar -xzf wordpress.tar.gz -C /usr/src/; \
-	rm wordpress.tar.gz; \
-	chown -R www-data:www-data /usr/src/wordpress
+USER 1001
 
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ADD containerfiles/ /
 
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["apache2-foreground"]
+#CMD ["/bin/sh","-c","while true; do echo hello world; sleep 60; done"]
+CMD ["/docker-entrypoint.sh"]
+
+# wp-admin01
+# ZD2R^0H0lq&4&X6g%5
