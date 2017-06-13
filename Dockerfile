@@ -1,26 +1,18 @@
-FROM php:5.6-alpine
+FROM php:5.6-apache
 
 # install the PHP extensions we need
 RUN set -ex; \
 	\
-	apk add --no-cache --virtual .build-deps \
-		libjpeg-turbo-dev \
-		libpng-dev \
+	apt-get update; \
+	apt-get install -y \
+		libjpeg-dev \
+		libpng12-dev \
 	; \
+	rm -rf /var/lib/apt/lists/*; \
 	\
 	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
-	docker-php-ext-install gd mysqli opcache; \
-	\
-	runDeps="$( \
-		scanelf --needed --nobanner --recursive \
-			/usr/local/lib/php/extensions \
-			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
-			| sort -u \
-			| xargs -r apk info --installed \
-			| sort -u \
-	)"; \
-	apk add --virtual .wordpress-phpexts-rundeps $runDeps; \
-	apk del .build-deps
+	docker-php-ext-install gd mysqli opcache
+# TODO consider removing the *-dev deps and only keeping the necessary lib* packages
 
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
@@ -33,49 +25,22 @@ RUN { \
 		echo 'opcache.enable_cli=1'; \
 	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
-# install wp-cli dependencies
-RUN apk add --no-cache \
-		less \
-		mysql-client
+RUN a2enmod rewrite expires
 
-RUN set -ex; \
-	mkdir -p /var/www/html; \
-	chown -R www-data:www-data /var/www/html
-WORKDIR /var/www/html
 VOLUME /var/www/html
 
-# pub   2048R/2F6B6B7F 2016-01-07
-#       Key fingerprint = 3B91 9162 5F3B 1F1B F5DD  3B47 673A 0204 2F6B 6B7F
-# uid                  Daniel Bachhuber <daniel@handbuilt.co>
-# sub   2048R/45F9CDE2 2016-01-07
-ENV WORDPRESS_CLI_GPG_KEY 3B9191625F3B1F1BF5DD3B47673A02042F6B6B7F
-
-ENV WORDPRESS_CLI_VERSION 1.1.0
-ENV WORDPRESS_CLI_SHA512 1fb4a3800441fc5188dac73efc6ca865076772ef698189ded379c53947d1fec30311e84eb4371455d415ef2cbb33d7593240fdf7b7f206277a12cfa8596d4b51
+ENV WORDPRESS_VERSION 4.8
+ENV WORDPRESS_SHA1 3738189a1f37a03fb9cb087160b457d7a641ccb4
 
 RUN set -ex; \
-	\
-	apk add --no-cache --virtual .fetch-deps \
-		gnupg \
-	; \
-	\
-	curl -o /usr/local/bin/wp.gpg -fSL "https://github.com/wp-cli/wp-cli/releases/download/v${WORDPRESS_CLI_VERSION}/wp-cli-${WORDPRESS_CLI_VERSION}.phar.gpg"; \
-	\
-	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$WORDPRESS_CLI_GPG_KEY"; \
-	gpg --batch --decrypt --output /usr/local/bin/wp /usr/local/bin/wp.gpg; \
-	rm -r "$GNUPGHOME" /usr/local/bin/wp.gpg; \
-	\
-	echo "$WORDPRESS_CLI_SHA512 */usr/local/bin/wp" | sha512sum -c -; \
-	chmod +x /usr/local/bin/wp; \
-	\
-	apk del .fetch-deps; \
-	\
-	wp --allow-root --version
+	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
+	echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
+# upstream tarballs include ./wordpress/ so this gives us /usr/src/wordpress
+	tar -xzf wordpress.tar.gz -C /usr/src/; \
+	rm wordpress.tar.gz; \
+	chown -R www-data:www-data /usr/src/wordpress
 
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-USER www-data
-CMD ["wp", "shell"]
+CMD ["apache2-foreground"]
