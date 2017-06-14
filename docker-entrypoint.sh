@@ -4,9 +4,9 @@ set -x
 
 MY_WP_ROOT=/var/www/html
 WP_CONTENT_ROOT=/data/wp-content
-MY_SRV=$(echo $OPENSHIFT_BUILD_NAME|awk -F'-' '{print $1"-"$2}')
+MY_SRV=wordpress-mysql-example
 
-WP_SITEURL=https://${MY_SRV}-${OPENSHIFT_BUILD_NAMESPACE}.${ENV_SUB_DOMAIN}
+WP_SITEURL=https://${MY_SRV}-${PROJECT}.playground.itandtel.at
 
 export MY_WP_ROOT WP_CONTENT_ROOT MY_SRV
 
