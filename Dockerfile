@@ -40,7 +40,7 @@ RUN set -ex; \
 	rm wordpress.tar.gz; \
 	chown -R www-data:www-data /usr/src/wordpress
 
-COPY docker-entrypoint.sh /usr/local/bin/
-
+COPY docker-entrypoint.sh /usr/bin/
+RUN chmod 777 /usr/bin/docker-entrypoint.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
