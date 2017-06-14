@@ -18,7 +18,7 @@ RUN set -x && \
     curl -sSO ${WP_DL} && \
     tar xfz latest.tar.gz && \
     mv /tmp/wordpress/* /var/www/html && \
-    cp /var/www/html/wp-content /tmp/ && \
+    mv /var/www/html/wp-content /tmp/ && \
     ln -s /data/wp-content /var/www/html/wp-content && \
    # sed -i 's/LogFormat "%h /LogFormat "%{X-Forwarded-For}i /' /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
    # sed -i 's/;date.timezone.*/date.timezone = Europe\/Vienna/' /etc/opt/rh/rh-php56/php.ini && \
