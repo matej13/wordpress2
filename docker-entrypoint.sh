@@ -6,7 +6,7 @@ MY_WP_ROOT=/var/www/html
 WP_CONTENT_ROOT=/data/wp-content
 MY_SRV=wordpress-mysql-example
 
-WP_SITEURL=https://${MY_SRV}-${PROJECT}.playground.itandtel.at
+WP_SITEURL=https://${MY_SRV}-wordpress1206.playground.itandtel.at
 
 export MY_WP_ROOT WP_CONTENT_ROOT MY_SRV
 
