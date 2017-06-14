@@ -13,17 +13,18 @@ RUN set -x && \
     rpm -qa|sort && \
     cd /tmp/ && \
     mkdir -p /data/wp-content && \
+    mkdir -p /var/www/html && \
     curl -sSO ${SMTP_DL} && \
     curl -sSO ${WP_DL} && \
     tar xfz latest.tar.gz && \
     mv /tmp/wordpress/* /var/www/html && \
     mv /var/www/html/wp-content /tmp/ && \
-   # ln -s /data/wp-content /opt/app-root/src/wp-content && \
+    ln -s /data/wp-content /var/www/html/wp-content && \
    # sed -i 's/LogFormat "%h /LogFormat "%{X-Forwarded-For}i /' /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
    # sed -i 's/;date.timezone.*/date.timezone = Europe\/Vienna/' /etc/opt/rh/rh-php56/php.ini && \
     touch /var/www/html/wp-config.php && \
     echo '<?php phpinfo(); ' > /var/www/html/pinf.php && \
-    chown -R 1001:0 /var/www/html && \
+    chown -R 1001:0 /data/wp-content /var/www/html && \
     chmod 777 /var/www/html/wp-config.php /var/www/html/wp-content && \
     chmod -R 777 /data/wp-content /var/opt/rh/rh-php56/lib/php/session /var/www/html/wp-content
 
@@ -31,10 +32,11 @@ EXPOSE 8080
 
 USER 1001
 
-ADD containerfiles/ /
-RUN chmod +x /docker-entrypoint.sh
+COPY docker-entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 #CMD ["/bin/sh","-c","while true; do echo hello world; sleep 60; done"]
-CMD ["/docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["docker-entrypoint.sh"]
 
 # wp-admin01
 # ZD2R^0H0lq&4&X6g%5
