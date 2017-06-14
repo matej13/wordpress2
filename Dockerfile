@@ -32,10 +32,10 @@ EXPOSE 8080
 
 USER 1001
 
-COPY docker-entrypoint.sh /usr/local/bin
-RUN chmod 777 /usr/local/bin/docker-entrypoint.sh
+ADD docker-entrypoint.sh 
+#RUN chmod 777 /usr/local/bin/docker-entrypoint.sh
 #CMD ["/bin/sh","-c","while true; do echo hello world; sleep 60; done"]
-ENTRYPOINT ["docker-entrypoint.sh"]
+#ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["docker-entrypoint.sh"]
 
 # wp-admin01
