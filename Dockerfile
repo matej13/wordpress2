@@ -24,7 +24,7 @@ RUN set -x && \
    # sed -i 's/;date.timezone.*/date.timezone = Europe\/Vienna/' /etc/opt/rh/rh-php56/php.ini && \
     touch /var/www/html/wp-config.php && \
     echo '<?php phpinfo(); ' > /var/www/html/pinf.php && \
-    chown -R 1001:0 /data/wp-content /var/www/html && \
+    #chown -R 1001:0 /data/wp-content /var/www/html && \
     chmod 777 /var/www/html/wp-config.php /var/www/html/wp-content && \
     chmod -R 777 /data/wp-content /var/opt/rh/rh-php56/lib/php/session /var/www/html/wp-content
 
